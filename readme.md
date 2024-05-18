@@ -1,6 +1,6 @@
 
 # Email Retriever
-Read your inbox and sent emails from a python program that parses out the subject, recipient, sender, time sent, and content of the email. Written in python, for enterprise software. 
+Read your inbox and sent emails from a python program that parses out the subject, content, sender and recipient, and the time received or sent. Also save the emails to a JSON record file and avoid saving duplicates. 
 
 &nbsp;
 

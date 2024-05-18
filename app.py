@@ -8,6 +8,7 @@ import imaplib
 import email
 from email.header import decode_header
 from datetime import datetime, timedelta
+import json
 
 class EmailRetriever:
 
@@ -62,16 +63,35 @@ class EmailRetriever:
                 "Content": content  # Add the content to the returned dictionary
             }
         return [fetch_email(e_id) for e_id in email_ids]
+    
+    def write_to_json(self, inbox, sent, records=None):
+        emails = inbox + sent + (records if records else [])
+        emails_set = set(tuple(email.items()) for email in emails) # Convert list of dictionaries to set of tuples to remove duplicates
+        emails = [dict(email) for email in emails_set] # Convert set of tuples back to list of dictionaries
+        with open('emails.json', 'w') as f:
+            json.dump(emails, f)
+    
+    def read_from_json(self,file_path):
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+            return data
+        
 
 my_email = EmailRetriever(EMAIL, PASSWORD)
 
-inbox = my_email.fetch_inbox()
-sent = my_email.fetch_sent()
+if st.button("Update Email Record"):
+    inbox = my_email.fetch_inbox()
+    sent = my_email.fetch_sent()
+    records = my_email.read_from_json('emails.json')
+    my_email.write_to_json(inbox, sent, records)
 
-st.title("Email Data")
-st.write("Inbox:")
-st.write(inbox)
-st.write("Sent:")
-st.write(sent)
-
-
+try: 
+    st.write("Email Data")
+    emails = my_email.read_from_json('emails.json')
+    st.write(f"There are {len(emails)} emails in your records.")
+    for email in emails:
+        st.write(email)
+except: 
+    inbox = my_email.fetch_inbox()
+    sent = my_email.fetch_sent()
+    my_email.write_to_json(inbox, sent)
