@@ -2,7 +2,8 @@
 # 5/10/24
 # Fetch emails from your account and gather the data on vacation requests and approvals
 
-from mysecrets import SENDER_EMAIL, SENDER_PASSWORD
+import streamlit as st
+from mysecrets import EMAIL, PASSWORD
 import imaplib
 import email
 from email.header import decode_header
@@ -44,14 +45,33 @@ class EmailRetriever:
             email_message = email.message_from_bytes(raw_email)
             date_tuple = email.utils.parsedate_tz(email_message['Date'])
             date_str = datetime.fromtimestamp(email.utils.mktime_tz(date_tuple)).strftime("%a, %d %b %Y %H:%M:%S") if date_tuple else "Unknown"
+            
+            # Extract the content of the email
+            if email_message.is_multipart():
+                for part in email_message.get_payload():
+                    if part.get_content_type() == 'text/plain':
+                        content = part.get_payload()
+            else:
+                content = email_message.get_payload()
+            
             return {
                 "From": self.decode_header(email_message['From']),
                 "To": self.decode_header(email_message['To']),
                 "Subject": self.decode_header(email_message['Subject']),
-                "Date": date_str
+                "Date": date_str,
+                "Content": content  # Add the content to the returned dictionary
             }
         return [fetch_email(e_id) for e_id in email_ids]
 
-emr = EmailRetriever(SENDER_EMAIL, SENDER_PASSWORD)
+my_email = EmailRetriever(EMAIL, PASSWORD)
+
+inbox = my_email.fetch_inbox()
+sent = my_email.fetch_sent()
+
+st.title("Email Data")
+st.write("Inbox:")
+st.write(inbox)
+st.write("Sent:")
+st.write(sent)
 
 
